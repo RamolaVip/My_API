@@ -17,31 +17,6 @@ from fastapi.middleware.cors import CORSMiddleware
 # Import CNN class
 #from model import CNN   # or paste class here
 import torch.nn as nn
-
-app = FastAPI(title = "MNIST CNN API")
-
-#Allow frontend access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-from fastapi import FastAPI, File, UploadFile
-import torch
-from torchvision import transforms
-from PIL import Image
-import io
-import torch.nn as nn
-from fastapi.middleware.cors import CORSMiddleware
-# Import CNN class
-from model import CNN   # or paste class here
-import torch.nn as nn
-
 app = FastAPI(title = "MNIST CNN API")
 
 #Allow frontend access
