@@ -15,7 +15,7 @@ import io
 import torch.nn as nn
 from fastapi.middleware.cors import CORSMiddleware
 # Import CNN class
-from model import CNN   # or paste class here
+#from model import CNN   # or paste class here
 import torch.nn as nn
 
 app = FastAPI(title = "MNIST CNN API")
