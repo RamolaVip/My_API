@@ -31,8 +31,33 @@ app.add_middleware(
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Define CNN model
+from fastapi import FastAPI, File, UploadFile
+import torch
+from torchvision import transforms
+from PIL import Image
+import io
+import torch.nn as nn
+from fastapi.middleware.cors import CORSMiddleware
+# Import CNN class
+from model import CNN   # or paste class here
+import torch.nn as nn
 
+app = FastAPI(title = "MNIST CNN API")
+
+#Allow frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# =========================
+# CNN MODEL DEFINITION
+# =========================
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
@@ -54,15 +79,23 @@ class CNN(nn.Module):
         x = self.fc2(x)
         return x
 
+# =========================
+# FASTAPI INITIALIZATION
+# =========================
+#app = FastAPI(title="MNIST CNN API")
 
-# Load model
-#model_path = "/content/drive/MyDrive/mnist_models/mnist_cnn_weights.pth"
-model_path = "mnist_cnn_weights.pth"
+# =========================
+# LOAD MODEL
+# =========================
 model = CNN()
-model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+model.load_state_dict(
+    torch.load("mnist_cnn_weights.pth", map_location=torch.device("cpu"))
+)
 model.eval()
 
-# Image preprocessing (same as training)
+# =========================
+# IMAGE TRANSFORM
+# =========================
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
     transforms.Resize((28, 28)),
@@ -70,9 +103,13 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 
+# =========================
+# ROUTES
+# =========================
+
 @app.get("/")
 def home():
-    return {"message": "MNIST CNN API is running"}
+    return {"message": "MNIST CNN API is running 🚀"}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -86,6 +123,16 @@ async def predict(file: UploadFile = File(...)):
     # Prediction
     with torch.no_grad():
         output = model(image)
-        _, predicted = torch.max(output, 1)
+        probabilities = torch.softmax(output, dim=1)
+        confidence, predicted = torch.max(probabilities, 1)
 
-    return {"predicted_digit": int(predicted.item())}
+    return {
+        "predicted_digit": int(predicted.item()),
+        "confidence": float(confidence.item())
+    }
+
+# =========================
+# RUN (optional)
+# =========================
+# Run using terminal:
+# uvicorn app:app --reload
